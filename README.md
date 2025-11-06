@@ -4,6 +4,7 @@
 
 A modern SaaS platform for tracking competitor pricing with automated monitoring, visual element selection, and intelligent notifications.
 
+![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
 ![Next.js](https://img.shields.io/badge/Next.js-14-black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Latest-blue)
