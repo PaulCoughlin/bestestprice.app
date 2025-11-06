@@ -58,10 +58,10 @@ A sleek multi-user SaaS tool for tracking competitor prices with live updates. U
 
 ### Backend
 - **Next.js API Routes**
-- **MySQL** database (SiteGround hosting)
+- **PostgreSQL** database (Vercel Postgres)
 - **Puppeteer** for JavaScript-heavy sites
 - **Cheerio** for static HTML parsing
-- **Nodemailer** for email (via domain SMTP)
+- **Resend** for transactional email
 
 ### Authentication
 - Custom auth implementation
@@ -70,10 +70,10 @@ A sleek multi-user SaaS tool for tracking competitor prices with live updates. U
 - Email verification flow
 
 ### Deployment
-- **SiteGround** hosting
-- MySQL database
-- Node.js environment
-- Cron job via cPanel
+- **Vercel** hosting
+- PostgreSQL database (Vercel Postgres)
+- Serverless functions
+- Vercel Cron for scheduled tasks
 
 ---
 
@@ -82,7 +82,7 @@ A sleek multi-user SaaS tool for tracking competitor prices with live updates. U
 ```sql
 -- Users table
 CREATE TABLE users (
-  id INT AUTO_INCREMENT PRIMARY KEY,
+  id SERIAL PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
   email VARCHAR(255) UNIQUE NOT NULL,
   password_hash VARCHAR(255) NOT NULL,
@@ -92,25 +92,25 @@ CREATE TABLE users (
   timezone VARCHAR(50) DEFAULT 'UTC',
   theme VARCHAR(10) DEFAULT 'system', -- 'light', 'dark', 'system'
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Password reset tokens
 CREATE TABLE password_resets (
-  id INT AUTO_INCREMENT PRIMARY KEY,
+  id SERIAL PRIMARY KEY,
   user_id INT NOT NULL,
   token VARCHAR(255) NOT NULL,
   expires_at TIMESTAMP NOT NULL,
   used BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-  INDEX idx_token (token),
-  INDEX idx_expires (expires_at)
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+CREATE INDEX idx_token ON password_resets(token);
+CREATE INDEX idx_expires ON password_resets(expires_at);
 
 -- Categories (nested structure)
 CREATE TABLE categories (
-  id INT AUTO_INCREMENT PRIMARY KEY,
+  id SERIAL PRIMARY KEY,
   user_id INT NOT NULL,
   parent_id INT NULL,
   name VARCHAR(255) NOT NULL,
@@ -118,15 +118,18 @@ CREATE TABLE categories (
   icon VARCHAR(50) DEFAULT 'folder', -- Lucide icon name
   sort_order INT DEFAULT 0,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-  FOREIGN KEY (parent_id) REFERENCES categories(id) ON DELETE CASCADE,
-  INDEX idx_user_parent (user_id, parent_id)
+  FOREIGN KEY (parent_id) REFERENCES categories(id) ON DELETE CASCADE
 );
+CREATE INDEX idx_user_parent ON categories(user_id, parent_id);
+
+-- Status enum type
+CREATE TYPE price_status AS ENUM ('active', 'error', 'paused');
 
 -- Tracked prices
 CREATE TABLE tracked_prices (
-  id INT AUTO_INCREMENT PRIMARY KEY,
+  id SERIAL PRIMARY KEY,
   user_id INT NOT NULL,
   category_id INT NULL,
   company_name VARCHAR(255) NOT NULL,
@@ -136,43 +139,46 @@ CREATE TABLE tracked_prices (
   current_price DECIMAL(10, 2) NULL,
   currency_symbol VARCHAR(3) NULL,
   last_checked TIMESTAMP NULL,
-  status ENUM('active', 'error', 'paused') DEFAULT 'active',
+  status price_status DEFAULT 'active',
   error_message TEXT NULL,
   sort_order INT DEFAULT 0,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-  FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL,
-  INDEX idx_user_status (user_id, status),
-  INDEX idx_last_checked (last_checked)
+  FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL
 );
+CREATE INDEX idx_user_status ON tracked_prices(user_id, status);
+CREATE INDEX idx_last_checked ON tracked_prices(last_checked);
 
 -- Price history
 CREATE TABLE price_history (
-  id INT AUTO_INCREMENT PRIMARY KEY,
+  id SERIAL PRIMARY KEY,
   tracked_price_id INT NOT NULL,
   price DECIMAL(10, 2) NOT NULL,
   currency_symbol VARCHAR(3) NULL,
   checked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (tracked_price_id) REFERENCES tracked_prices(id) ON DELETE CASCADE,
-  INDEX idx_tracked_price_date (tracked_price_id, checked_at)
+  FOREIGN KEY (tracked_price_id) REFERENCES tracked_prices(id) ON DELETE CASCADE
 );
+CREATE INDEX idx_tracked_price_date ON price_history(tracked_price_id, checked_at);
+
+-- Notification type enum
+CREATE TYPE notification_type AS ENUM ('price_change', 'error');
 
 -- Email notifications log
 CREATE TABLE notifications (
-  id INT AUTO_INCREMENT PRIMARY KEY,
+  id SERIAL PRIMARY KEY,
   user_id INT NOT NULL,
   tracked_price_id INT NOT NULL,
-  type ENUM('price_change', 'error') NOT NULL,
+  type notification_type NOT NULL,
   old_price DECIMAL(10, 2) NULL,
   new_price DECIMAL(10, 2) NULL,
   percentage_change DECIMAL(5, 2) NULL,
   error_message TEXT NULL,
   sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-  FOREIGN KEY (tracked_price_id) REFERENCES tracked_prices(id) ON DELETE CASCADE,
-  INDEX idx_user_sent (user_id, sent_at)
+  FOREIGN KEY (tracked_price_id) REFERENCES tracked_prices(id) ON DELETE CASCADE
 );
+CREATE INDEX idx_user_sent ON notifications(user_id, sent_at);
 ```
 
 ---
@@ -262,9 +268,9 @@ competitor-price-tracker/
 │   │       ├── ThemeToggle.tsx
 │   │       └── UserMenu.tsx
 │   ├── lib/
-│   │   ├── db.ts (MySQL connection pool)
+│   │   ├── db.ts (PostgreSQL connection via @vercel/postgres)
 │   │   ├── auth.ts (session management, JWT)
-│   │   ├── email.ts (Nodemailer setup)
+│   │   ├── email.ts (Resend email service)
 │   │   ├── scraper.ts (Puppeteer/Cheerio logic)
 │   │   ├── price-extractor.ts (parse price from text)
 │   │   ├── password.ts (bcrypt utilities)
@@ -296,12 +302,12 @@ competitor-price-tracker/
 2. Install and configure dependencies:
    - Tailwind CSS
    - Shadcn UI
-   - MySQL2
+   - @vercel/postgres
    - bcrypt
    - jsonwebtoken
-   - Nodemailer
+   - Resend
    - next-themes
-3. Set up MySQL database with schema
+3. Set up PostgreSQL database with schema
 4. Create database connection utility with connection pooling
 5. Implement authentication system:
    - Registration with email verification
@@ -580,7 +586,7 @@ competitor-price-tracker/
    - Handle timezone conversions
    - Batch processing (avoid memory issues)
 3. Build email notification system:
-   - Set up Nodemailer with SMTP
+   - Set up Resend API
    - Create email templates (HTML + plain text):
      - Price change notification
      - Error notification
@@ -594,10 +600,11 @@ competitor-price-tracker/
    - Insert to notifications table
    - Track sent emails
    - Prevent duplicate notifications
-5. Set up cron job on SiteGround:
+5. Set up Vercel Cron job:
+   - Configure in vercel.json
    - Runs every hour
    - Hits /api/cron/daily-check endpoint
-   - Includes secret token in header
+   - Protected with CRON_SECRET
 
 **Email Template (Price Change):**
 ```
@@ -854,12 +861,16 @@ function extractPrice(text) {
 
 ### Cron Job Implementation
 
-**SiteGround Cron Setup:**
-```bash
-# Run every hour
-0 * * * * curl -X POST https://yourapp.com/api/cron/daily-check \
-  -H "Authorization: Bearer YOUR_CRON_SECRET" \
-  -H "Content-Type: application/json"
+**Vercel Cron Setup (vercel.json):**
+```json
+{
+  "crons": [
+    {
+      "path": "/api/cron/daily-check",
+      "schedule": "0 * * * *"
+    }
+  ]
+}
 ```
 
 **API Route Logic:**
@@ -1001,40 +1012,30 @@ function PriceHistoryChart({ data, currency = '$' }) {
 ## Environment Variables
 
 ```env
-# Database
-DATABASE_HOST=localhost
-DATABASE_PORT=3306
-DATABASE_USER=your_db_user
-DATABASE_PASSWORD=your_db_password
-DATABASE_NAME=price_tracker
+# Database (provided by Vercel Postgres)
+POSTGRES_URL=your_postgres_url
+POSTGRES_PRISMA_URL=your_prisma_url
+POSTGRES_URL_NON_POOLING=your_non_pooling_url
 
 # Authentication
 JWT_SECRET=your-super-secret-jwt-key-min-32-chars
 JWT_EXPIRES_IN=7d
 
-# Email (Nodemailer)
-SMTP_HOST=mail.yourdomain.com
-SMTP_PORT=465
-SMTP_SECURE=true
-SMTP_USER=noreply@yourdomain.com
-SMTP_PASS=your-smtp-password
-EMAIL_FROM=Price Tracker <noreply@yourdomain.com>
+# Email (Resend)
+RESEND_API_KEY=your_resend_api_key
+EMAIL_FROM=noreply@yourdomain.com
+EMAIL_FROM_NAME=Price Tracker
 
 # Application
 NEXT_PUBLIC_APP_URL=https://yourapp.com
-NEXT_PUBLIC_APP_NAME=Price Tracker
+NEXT_PUBLIC_APP_NAME=Competitor Price Tracker
 
 # Cron Protection
 CRON_SECRET=random-secret-string-for-cron-authentication
 
 # Scraper Configuration
 SCRAPER_TIMEOUT=30000
-SCRAPER_USER_AGENT=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36
 SCRAPER_MAX_RETRIES=3
-
-# Feature Flags (optional)
-ENABLE_PUPPETEER=true
-ENABLE_EMAIL_NOTIFICATIONS=true
 ```
 
 ---
@@ -1048,30 +1049,30 @@ ENABLE_EMAIL_NOTIFICATIONS=true
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "typescript": "^5.0.0",
-    
-    "mysql2": "^3.6.0",
+
+    "@vercel/postgres": "^0.5.0",
     "bcrypt": "^5.1.1",
     "jsonwebtoken": "^9.0.2",
-    "nodemailer": "^6.9.7",
-    
+    "resend": "^2.0.0",
+
     "puppeteer": "^21.5.0",
     "cheerio": "^1.0.0-rc.12",
     "axios": "^1.6.0",
-    
+
     "recharts": "^2.10.0",
     "lucide-react": "^0.292.0",
     "next-themes": "^0.2.1",
-    
+
     "@radix-ui/react-dialog": "^1.0.5",
     "@radix-ui/react-dropdown-menu": "^2.0.6",
     "@radix-ui/react-select": "^2.0.0",
     "@radix-ui/react-toast": "^1.1.5",
-    
+
     "tailwindcss": "^3.3.0",
     "tailwind-merge": "^2.0.0",
     "clsx": "^2.0.0",
     "class-variance-authority": "^0.7.0",
-    
+
     "zod": "^3.22.4",
     "date-fns": "^2.30.0",
     "uuid": "^9.0.1"
@@ -1081,7 +1082,6 @@ ENABLE_EMAIL_NOTIFICATIONS=true
     "@types/react": "^18.2.0",
     "@types/bcrypt": "^5.0.2",
     "@types/jsonwebtoken": "^9.0.5",
-    "@types/nodemailer": "^6.4.14",
     "@types/uuid": "^9.0.7",
     "autoprefixer": "^10.4.16",
     "postcss": "^8.4.31"
@@ -1102,7 +1102,7 @@ ENABLE_EMAIL_NOTIFICATIONS=true
 ### SQL Injection Prevention
 - Always use parameterized queries
 - Never concatenate user input into queries
-- Use prepared statements with MySQL2
+- Use parameterized queries with @vercel/postgres
 
 ### XSS Protection
 - Sanitize all user input
@@ -1192,12 +1192,12 @@ ENABLE_EMAIL_NOTIFICATIONS=true
 ## Deployment Checklist
 
 ### Pre-Deployment
-- [ ] Environment variables configured
-- [ ] Database created and migrated
-- [ ] SMTP credentials verified
-- [ ] Domain email configured
-- [ ] SSL certificate installed
-- [ ] Cron job scheduled
+- [ ] Environment variables configured in Vercel
+- [ ] Vercel Postgres database created and migrated
+- [ ] Resend API key configured
+- [ ] Domain email verified in Resend
+- [ ] SSL certificate (automatic with Vercel)
+- [ ] Vercel Cron configured in vercel.json
 - [ ] Rate limiting tested
 - [ ] Error tracking configured (optional: Sentry)
 
@@ -1217,8 +1217,8 @@ ENABLE_EMAIL_NOTIFICATIONS=true
 - [ ] Cross-browser compatibility
 
 ### Go-Live
-- [ ] Deploy to SiteGround
-- [ ] Verify cron job running
+- [ ] Deploy to Vercel
+- [ ] Verify Vercel Cron running
 - [ ] Test end-to-end user flow
 - [ ] Monitor error logs
 - [ ] Check email deliverability
@@ -1265,17 +1265,18 @@ ENABLE_EMAIL_NOTIFICATIONS=true
 
 ### Documentation
 - Next.js: https://nextjs.org/docs
+- Vercel Postgres: https://vercel.com/docs/storage/vercel-postgres
 - Shadcn UI: https://ui.shadcn.com
 - Tailwind: https://tailwindcss.com/docs
 - Recharts: https://recharts.org
 - Puppeteer: https://pptr.dev
-- Nodemailer: https://nodemailer.com
+- Resend: https://resend.com/docs
 
 ### Tools
-- MySQL Workbench for database management
+- Vercel Dashboard for database management
 - Postman for API testing
 - Chrome DevTools for selector testing
-- Mailtrap for email testing (dev)
+- Resend dashboard for email testing
 
 ---
 

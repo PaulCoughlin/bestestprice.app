@@ -1,5 +1,7 @@
 # 🎯 Competitor Price Tracker
 
+**Version: 0.1.0** | Last Updated: 2025-11-06
+
 A modern SaaS platform for tracking competitor pricing with automated monitoring, visual element selection, and intelligent notifications.
 
 ![Next.js](https://img.shields.io/badge/Next.js-14-black)
@@ -342,6 +344,17 @@ For issues, questions, or feature requests:
 - [Shadcn UI](https://ui.shadcn.com/) - UI components
 - [Tailwind CSS](https://tailwindcss.com/) - Styling
 - [Recharts](https://recharts.org/) - Data visualization
+
+---
+
+## 📌 Version History
+
+### Version 0.1.0 (2025-11-06)
+- Initial documentation setup
+- Project specification complete
+- Architecture defined (PostgreSQL + Vercel + Resend)
+- Database schema designed
+- Implementation phases planned
 
 ---
 
