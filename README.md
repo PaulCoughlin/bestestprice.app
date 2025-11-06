@@ -1,6 +1,6 @@
 # 🎯 Competitor Price Tracker
 
-**Version: 0.1.0** | Last Updated: 2025-11-06
+**Version: 0.1.1** | Last Updated: 2025-11-06
 
 A modern SaaS platform for tracking competitor pricing with automated monitoring, visual element selection, and intelligent notifications.
 
@@ -348,6 +348,13 @@ For issues, questions, or feature requests:
 ---
 
 ## 📌 Version History
+
+### Version 0.1.1 (2025-11-06)
+- Add comprehensive SETUP.md development environment guide
+- Complete Vercel setup instructions for beginners
+- Database configuration walkthrough
+- Local development workflow documentation
+- Testing and debugging guides
 
 ### Version 0.1.0 (2025-11-06)
 - Initial documentation setup
