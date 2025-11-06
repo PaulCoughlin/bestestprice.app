@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Competitor Price Tracker - Coming Soon</title>
+    <meta name="description" content="Track competitor prices with automated monitoring, visual element selection, and intelligent notifications.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        border: "hsl(217 33% 17%)",
+                        background: "hsl(222 47% 11%)",
+                        foreground: "hsl(213 31% 91%)",
+                        primary: "hsl(217 91% 60%)",
+                        secondary: "hsl(222 47% 15%)",
+                        accent: "hsl(217 91% 60%)",
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.8s ease-in-out',
+                        'slide-up': 'slideUp 0.6s ease-out',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(20px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-20px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, hsl(222 47% 11%) 0%, hsl(222 47% 8%) 100%);
+            min-height: 100vh;
+        }
+
+        .glow {
+            box-shadow: 0 0 20px rgba(96, 165, 250, 0.3),
+                        0 0 40px rgba(96, 165, 250, 0.2),
+                        0 0 60px rgba(96, 165, 250, 0.1);
+        }
+
+        .grid-background {
+            background-image: 
+                linear-gradient(to right, rgba(96, 165, 250, 0.05) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(96, 165, 250, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 50%, #ec4899 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .card {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(96, 165, 250, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .feature-icon {
+            background: linear-gradient(135deg, rgba(96, 165, 250, 0.2) 0%, rgba(167, 139, 250, 0.2) 100%);
+        }
+    </style>
+</head>
+<body class="relative overflow-x-hidden">
+    <!-- Grid Background -->
+    <div class="fixed inset-0 grid-background opacity-30"></div>
+
+    <!-- Floating Orbs -->
+    <div class="fixed top-20 left-20 w-64 h-64 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-float"></div>
+    <div class="fixed top-40 right-20 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-float" style="animation-delay: 2s;"></div>
+    <div class="fixed bottom-20 left-1/2 w-80 h-80 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-float" style="animation-delay: 4s;"></div>
+
+    <!-- Content -->
+    <div class="relative z-10">
+        <!-- Header -->
+        <header class="pt-8 pb-4 px-6">
+            <div class="max-w-7xl mx-auto">
+                <div class="flex items-center gap-3 animate-fade-in">
+                    <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center glow">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                    </div>
+                    <span class="text-xl font-bold text-foreground">Price Tracker</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Hero Section -->
+        <main class="px-6 py-20">
+            <div class="max-w-7xl mx-auto">
+                <div class="text-center max-w-4xl mx-auto">
+                    <!-- Badge -->
+                    <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full card mb-8 animate-slide-up">
+                        <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                        <span class="text-sm text-foreground/80">Development in Progress</span>
+                    </div>
+
+                    <!-- Title -->
+                    <h1 class="text-6xl md:text-7xl lg:text-8xl font-bold mb-6 animate-slide-up gradient-text" style="animation-delay: 0.1s;">
+                        Track Competitor Prices
+                    </h1>
+                    
+                    <p class="text-xl md:text-2xl text-foreground/70 mb-12 max-w-3xl mx-auto animate-slide-up leading-relaxed" style="animation-delay: 0.2s;">
+                        Automated monitoring, visual element selection, and intelligent notifications. 
+                        Stay ahead of your competition with real-time price tracking.
+                    </p>
+
+                    <!-- CTA Buttons -->
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center mb-20 animate-slide-up" style="animation-delay: 0.3s;">
+                        <button class="group relative px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-semibold text-lg overflow-hidden glow hover:shadow-2xl transition-all duration-300">
+                            <span class="relative z-10 flex items-center justify-center gap-2">
+                                Get Notified
+                                <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                                </svg>
+                            </span>
+                            <div class="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        </button>
+                        
+                        <button class="px-8 py-4 card text-foreground rounded-lg font-semibold text-lg hover:bg-secondary/80 transition-all duration-300 flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            Learn More
+                        </button>
+                    </div>
+
+                    <!-- Features Grid -->
+                    <div class="grid md:grid-cols-3 gap-6 mt-16">
+                        <!-- Feature 1 -->
+                        <div class="card rounded-2xl p-8 hover:border-blue-500/40 transition-all duration-300 animate-slide-up" style="animation-delay: 0.4s;">
+                            <div class="feature-icon w-14 h-14 rounded-xl flex items-center justify-center mb-6 mx-auto">
+                                <svg class="w-7 h-7 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                </svg>
+                            </div>
+                            <h3 class="text-xl font-semibold text-foreground mb-3">Visual Selection</h3>
+                            <p class="text-foreground/60 leading-relaxed">Point and click to select any price element from competitor websites. No technical knowledge required.</p>
+                        </div>
+
+                        <!-- Feature 2 -->
+                        <div class="card rounded-2xl p-8 hover:border-purple-500/40 transition-all duration-300 animate-slide-up" style="animation-delay: 0.5s;">
+                            <div class="feature-icon w-14 h-14 rounded-xl flex items-center justify-center mb-6 mx-auto">
+                                <svg class="w-7 h-7 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                            <h3 class="text-xl font-semibold text-foreground mb-3">Automated Monitoring</h3>
+                            <p class="text-foreground/60 leading-relaxed">Set it and forget it. Daily price checks run automatically with customizable schedules.</p>
+                        </div>
+
+                        <!-- Feature 3 -->
+                        <div class="card rounded-2xl p-8 hover:border-pink-500/40 transition-all duration-300 animate-slide-up" style="animation-delay: 0.6s;">
+                            <div class="feature-icon w-14 h-14 rounded-xl flex items-center justify-center mb-6 mx-auto">
+                                <svg class="w-7 h-7 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                                </svg>
+                            </div>
+                            <h3 class="text-xl font-semibold text-foreground mb-3">Smart Analytics</h3>
+                            <p class="text-foreground/60 leading-relaxed">Interactive charts showing price trends, percentage changes, and historical data at a glance.</p>
+                        </div>
+                    </div>
+
+                    <!-- Stats -->
+                    <div class="grid grid-cols-3 gap-8 mt-20 py-12 border-y border-border animate-slide-up" style="animation-delay: 0.7s;">
+                        <div>
+                            <div class="text-4xl font-bold gradient-text mb-2">24/7</div>
+                            <div class="text-foreground/60">Monitoring</div>
+                        </div>
+                        <div>
+                            <div class="text-4xl font-bold gradient-text mb-2">Real-time</div>
+                            <div class="text-foreground/60">Notifications</div>
+                        </div>
+                        <div>
+                            <div class="text-4xl font-bold gradient-text mb-2">Unlimited</div>
+                            <div class="text-foreground/60">Tracking</div>
+                        </div>
+                    </div>
+
+                    <!-- Tech Stack -->
+                    <div class="mt-20 animate-slide-up" style="animation-delay: 0.8s;">
+                        <p class="text-foreground/40 text-sm mb-6 uppercase tracking-wider font-semibold">Built with Modern Technology</p>
+                        <div class="flex flex-wrap justify-center gap-6 opacity-60">
+                            <div class="px-6 py-3 card rounded-lg text-sm font-medium text-foreground/80">Next.js</div>
+                            <div class="px-6 py-3 card rounded-lg text-sm font-medium text-foreground/80">TypeScript</div>
+                            <div class="px-6 py-3 card rounded-lg text-sm font-medium text-foreground/80">PostgreSQL</div>
+                            <div class="px-6 py-3 card rounded-lg text-sm font-medium text-foreground/80">Vercel</div>
+                            <div class="px-6 py-3 card rounded-lg text-sm font-medium text-foreground/80">Tailwind CSS</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="px-6 py-12 border-t border-border">
+            <div class="max-w-7xl mx-auto">
+                <div class="flex flex-col md:flex-row justify-between items-center gap-6">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                            </svg>
+                        </div>
+                        <span class="text-foreground/60 text-sm">© 2024 Price Tracker. All rights reserved.</span>
+                    </div>
+                    
+                    <div class="flex gap-6">
+                        <a href="#" class="text-foreground/60 hover:text-foreground transition-colors">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                            </svg>
+                        </a>
+                        <a href="#" class="text-foreground/60 hover:text-foreground transition-colors">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+</body>
+</html>
